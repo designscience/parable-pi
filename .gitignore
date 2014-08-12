@@ -1,0 +1,5 @@
+~backup/
+~assets/
+*.bak
+*.pyc
+*.lnk
