@@ -32,6 +32,7 @@ import time
 import threading
 import Queue
 import wx
+from subprocess import call
 
 __version__ = "2.0 beta"
 
@@ -40,12 +41,13 @@ class parablew(model.Background):
         model.Background.__init__(self, aParent, aBgRsrc)
 
         # This doesn't seem to bind the event
-        #panel = wx.Panel(self)
-        #panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+        # panel = wx.Panel(self)
+        # panel.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
 
         self.title = "Parable Pi - v" + __version__
 
         self.components.chkBeeps.visible = True
+        self.components.KeyInput.setFocus()
 
         # foot switch current state
         self.foot = False       # set to True when switch is closed
@@ -226,7 +228,7 @@ class parablew(model.Background):
 
         # add output objects to an output bank
         self.vpb = parclasses.ValvePortBank()
-        self.vpb.addPort(self.vp1)
+        # self.vpb.addPort(self.vp1)
         self.vpb.addPort(self.vp2)
         # self.vpb.addPort(self.vp3)
         self.vpb.execute()   # show the lights
@@ -265,13 +267,23 @@ class parablew(model.Background):
         """
 
     # key press handler (for when I figure out how to bind it
-    def on_key_down(self, event):
-        keycode = event.GetKeyCode()
+    # def on_key_down(self, event):
+
+    def on_KeyInput_keyDown(self, event):
+        keycode = event.keyCode
         print "Key pressed " + str(keycode)
-        if keycode == wx.WXK_F1:
-            self.on_pbTap_mouseDown(self, event)
+        self.components.KeyInput.clear()
+        if keycode == wx.WXK_SPACE:  # wx.WXK_RETURN
+            self.on_pbTap_mouseDown(event)
+        elif keycode == wx.WXK_ESCAPE:
+            self.on_btnKill_mouseClick(event)
+        elif keycode == 81:  # q
+            self.runSequence(6)
+        elif keycode == 87:  # w
+            self.runSequence(3)
+        elif keycode == 351:  # fn F12
+            call(["sudo poweroff", ""])
         event.Skip()
-        
 
     def on_initialize(self, event):
         """ initialize the UI components """
@@ -564,7 +576,8 @@ class parablew(model.Background):
         """ This is called on the down click of all sequence buttons.
             it toggles the sequence state (toggle handled in ControlBank) """
         if (self.auto_pilot == False):
-            #print"toggle|" + self.sequences[event.target.id]
+            # print event.target.id
+            # print"toggle|" + self.sequences[event.target.id]
             self.out_queue.put("toggle|" + self.sequences[event.target.id])
             self.trigger_times[event.target.id] = time.time()
         event.Skip()
@@ -576,8 +589,15 @@ class parablew(model.Background):
             if time.time() - self.trigger_times[event.target.id] > 0.2:
                 #print "stop|" + self.sequences[event.target.id]
                 self.out_queue.put("stop|" + self.sequences[event.target.id])
+        self.components.KeyInput.setFocus()
         event.Skip()
-              
+
+    def runSequence(self, sequence_id):
+        """ run a sequence by name (for keyboard operation, etc) """
+        if (self.auto_pilot == False):
+            #print "stop|" + self.sequences[event.target.id]
+            self.out_queue.put("toggle|" + self.sequences[sequence_id])
+
     def on_fileImport_command(self, event):
         if (self.seq.running() == False):
             #self.components.slSeqRate.value = 50
@@ -680,8 +700,6 @@ class parablew(model.Background):
         self.out_queue.put("loop|" + self.components[btn].label + "|off")
         self.out_queue.put("start|" + self.components[btn].label)
 
-
-        
 if __name__ == '__main__':
     app = model.Application(parablew)
     app.MainLoop()

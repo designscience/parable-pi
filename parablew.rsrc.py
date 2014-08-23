@@ -46,6 +46,11 @@
      },
          'components': [
 
+{'type':'TextField', 
+    'name':'KeyInput', 
+    'position':(350, 500), 
+    },
+
 {'type':'StaticBox', 
     'name':'AutoPilotBox', 
     'position':(21, 139), 
