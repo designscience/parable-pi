@@ -62,9 +62,7 @@ class parablew(model.Background):
         # sequence maintenance
         self.sequences = [""] * self.num_buttons  # Sequence name
         self.trigger_times = [0.0] * self.num_buttons  # Sequence name
-        self.seq_directory = "C:\\sequences\\"
-        #self.seq_directory = "C:\\Documents and Settings\\Stu D'Alessandro\\My Documents\\Burning Man\\Shiva Vista\\2009\\Parable\\sequences\\"
-        #self.seq_directory = "..\\..\\sequences\\"
+        self.seq_directory = "/home/pi/Sequences/"
 
         # Threading queues
         self.out_queue = Queue.Queue() # send commands to main thread
@@ -130,7 +128,6 @@ class parablew(model.Background):
         self.gui_map.addMapping(23,  0)
         self.gui_map.addMapping(24,  0)
                 
-
         # map for importing direct to channels
         self.straight_map.addMapping(1, 1)
         self.straight_map.addMapping(2,  2)
@@ -216,12 +213,12 @@ class parablew(model.Background):
             self.components['SEQ' + str(i)] = {'type':'Button', 'name':'SEQ' + str(i), 'id':i, 'position':(20 +(152 * (i%5)), 150 + (40 * int(i/5))), 'size':(120, 30), 'label':'Sequence ' + str(i+1), 'command':'seqBtn' + str(i+1), 'visible':False}
             
         # Other output objects
-        self.vp2 = parclasses.ValvePort_Parallel(24, 6)
+        self.vp2 = parclasses.ValvePort_GPIO(18, 6)
         self.vp2.setMap(self.effect_map)
 
-        self.vp3 = parclasses.ValvePort_Beep() # not very good
-        self.vp3.setMap(self.effect_map)
-        self.vp3.mute = True
+        # self.vp3 = parclasses.ValvePort_Beep() # not very good
+        # self.vp3.setMap(self.effect_map)
+        # self.vp3.mute = True
 
         # temp sequence rate scaling factor
         #self.scaleFactor = 1.0
@@ -231,7 +228,7 @@ class parablew(model.Background):
         self.vpb = parclasses.ValvePortBank()
         self.vpb.addPort(self.vp1)
         self.vpb.addPort(self.vp2)
-        self.vpb.addPort(self.vp3)
+        # self.vpb.addPort(self.vp3)
         self.vpb.execute()   # show the lights
 
         #create the temp sequence object - used to try out sequences
@@ -249,7 +246,7 @@ class parablew(model.Background):
         self.seq.sortEvents()
 
         # Create the threaded sequence handler (ControlBank)
-        self.cb = parthreads.ControlBank("C:\\sequences\\")
+        self.cb = parthreads.ControlBank(self.seq_directory)
 
         # Create thread objects
         self.ttemp = threading.Thread(target=self.seq, args=(self.temp_ev_queue,self.temp_out_queue))

@@ -26,20 +26,27 @@ Version 2.1
 ***************************************************** """
 
 from __future__ import division
-import parallel
-import winsound
+# import parallel
+# import winsound
 import operator
 import time
 import random
-import os
-import sys
+# import os
+# import sys
 import threading
 import wx
 import xml.etree.ElementTree as ET  # XML support
-#import BTIC  # beat keeper class
 from Queue import Queue
 
-max_channels = 24  
+# Install Raspberry Pi GPIO class
+gpio_present = True
+try:
+    import RPi.GPIO as GPIO
+except RuntimeError:
+    print("Error importing RPi.GPIO library")
+    gpio_present = false
+
+max_channels = 24
 
 
 #*********************** Channel ****************************
@@ -1023,8 +1030,10 @@ class ValvePort(object):
         #execstate stores the state of the valves since the last execute
         self.execstate = [0] * self.num_channels
         
-        #Turn all channels off
-        self.reset();
+        # set all channels to OFF NOTE:this does NOT execute!
+        # @@@ run self.reset() for most inherited classes
+        for i in range(0, self.num_channels):
+            self.channels[i]=0
 
         #Set the exec state so the reset is performed
         for i in range(0, self.num_channels):
@@ -1054,7 +1063,6 @@ class ValvePort(object):
         else:
             return False
 
-
     def setEvent(self, event):
         """Set a channel by a ControlEvent event. Maintains
             a count which would """
@@ -1075,7 +1083,6 @@ class ValvePort(object):
             else:
                 return False
 
-
     def oneChannel(self, channel, value=1):
         """Sets ONE channel ON (default), all others off
            Use execute() to write the changes to the channels"""
@@ -1093,7 +1100,6 @@ class ValvePort(object):
         else:
             return False
 
-
     def execute(self):
         """Write the current (internal) state of the channels
             to the output device.  Use setChannel() or
@@ -1103,24 +1109,19 @@ class ValvePort(object):
         for i in range(0, self.num_channels):
             self.execstate[i] = self.channels[i]
 
-
     def reset(self):
         """ Clears all channels and sends to the hardware"""
         #set all channels to OFF
         for i in range(0, self.num_channels):
             self.channels[i]=0
-
         self.execute()
-
 
     def all_on(self):
         """Sets all channels on and writes to the hardware"""
         #set all channels to ON
         for i in range(0, self.num_channels):
             self.channels[i]=1
-
         self.execute()
-
 
     def setChannelExec(self, channel, value):
         """Changes the state of one channel and sends the change
@@ -1134,7 +1135,6 @@ class ValvePort(object):
         else:
             return False
 
-
     def setEventExec(self, event):
         """Changes the state of one channel and sends the change
             immediately to the channel device"""
@@ -1143,7 +1143,6 @@ class ValvePort(object):
             return True
         else:
             return False
-
 
     def oneChannelExec(self, channel, value=1):
         """Changes the state of one channel clearing all others
@@ -1157,6 +1156,40 @@ class ValvePort(object):
         else:
             return False
 
+#***************** ValvePort_GPIO *****************************
+
+class ValvePort_GPIO(ValvePort):
+    """ValvePort class for Raspberry Pi GPIO"""
+
+    def __init__(self, channels=24, channelsperbank=6):
+        ValvePort.__init__(self, channels, channelsperbank)
+        self.channel_offset = 2  # Added to channel number to map to first used GPIO channel
+        GPIO.setmode(GPIO.BCM)  # GPIO.BCM for IO pins, GPIO.BOARD for connector pins
+        GPIO.setwarnings(False)
+        GPIO.setup(2, GPIO.OUT)
+        GPIO.setup(3, GPIO.OUT)
+        GPIO.setup(4, GPIO.OUT)
+        GPIO.setup(5, GPIO.OUT)
+        GPIO.setup(6, GPIO.OUT)
+        GPIO.setup(7, GPIO.OUT)
+        GPIO.setup(8, GPIO.OUT)
+        GPIO.setup(9, GPIO.OUT)
+        GPIO.setup(10, GPIO.OUT)
+        GPIO.setup(11, GPIO.OUT)
+        GPIO.setup(12, GPIO.OUT)
+        GPIO.setup(13, GPIO.OUT)
+        GPIO.setup(14, GPIO.OUT)
+        GPIO.setup(15, GPIO.OUT)
+        GPIO.setup(16, GPIO.OUT)
+        GPIO.setup(17, GPIO.OUT)
+        GPIO.setup(18, GPIO.OUT)
+        GPIO.setup(19, GPIO.OUT)
+        self.reset()
+
+    def execute(self):
+        """writes state of channel map to the GPIO"""
+        for ch in range(0, self.num_channels):
+            GPIO.output(ch + self.channel_offset, self.channels[ch])
 
 
 #***************** ValvePort_GUI *************************
@@ -1197,177 +1230,13 @@ class ValvePort_GUI(ValvePort):
         
 
 
-#***************** ValvePort_Parallel *************************
-    
-class ValvePort_Parallel(ValvePort):
-    """Parallel port implementation of ValvePort classe
-        this was used in the original Parable versions """
-
-    def __init__(self, channels=22, channelsperbank=6):
-        try:
-            self.py = parallel.Parallel()
-        except:
-            print "Unable to open parallel port"
-            self.py = None
-            
-        ValvePort.__init__(self, channels, channelsperbank)
-        """
-        self.num_channels=channels;
-        self.channelsPerBank=channelsperbank
-        self.channels = [0] * self.num_channels
-        self.reset();
-        """
-
-    """
-    def setChannel(self, channel, value):
-        #Sets a channel to OFF (value=0) or ON (value=non-0).
-        #   Increments a count with each "ON".  Decrements with
-        #   each "OFF".  Use execute() to write the changes to the
-        #   channels
-        if self.channel_map != None:
-            channel = self.channel_map.lookup(channel)
-
-        if channel > 0 and channel <= self.num_channels:
-            if value > 0:
-                self.channels[channel-1] += 1
-            else:
-                self.channels[channel-1] -= 1 
-                if self.channels[channel-1] < 0:
-                    self.channels[channel-1] = 0
-            return True
-        else:
-            return False
-    """
-
-    """
-    def setEvent(self, event):
-        #Set a channel by a ControlEvent event. Maintains
-        #    a count which would 
-        if isinstance(event, ControlEvent):
-            if self.channel_map != None:
-                channel = self.channel_map.lookup(event.channel)
-            else:
-                channel = event.channel
-
-            if channel > 0 and channel <= self.num_channels:
-                if event.action == "on":
-                    self.channels[channel-1] += 1 
-                else:
-                    self.channels[channel-1] -= 1 
-                    if self.channels[channel-1] < 0:
-                        self.channels[channel-1] = 0
-                return True
-            else:
-                return False
-    """
-    """
-    def oneChannel(self, channel, value=1):
-        #Sets ONE channel ON (default), all others off
-        #   Use execute() to write the changes to the channels
-        if self.channel_map != None:
-            channel = self.channel_map.lookup(channel)
-
-        #set all channels to OFF
-        for i in range(0, self.num_channels):
-            self.channels[i]=0
-
-        # Set this channel to VALUE
-        if channel > 0 or channel <= self.num_channels:
-            self.channels[channel-1]=value
-            return True
-        else:
-            return False
-    """
-
-    def execute(self):
-        """Write the current (internal) state of the channels
-            to the channels themselves.  Use setChannel() or
-            setEvent() to update channel state before sending
-            to the ports."""
-        data = 0
-        base_channel = 0 # first channel for this bank
-        
-        #how many banks need to be updated?
-        banks = self.num_channels // self.channelsPerBank
-        for bk in range(0, banks):  # bank number, 0-based
-            base_channel = self.channelsPerBank * bk
-            data = 0
-
-            # update each channel in the bank
-            for ch in range (0, self.channelsPerBank):
-                chnl = ch + base_channel # get channel number, 0-based
-                if self.channels[chnl] > 0:
-                    #Write a bit to data
-                    data |= operator.lshift(1, ch)
-
-            if (self.py != None):
-                self.py.setData(data | (bk << 6))
-                self.py.setDataStrobe(0)
-                self.py.setDataStrobe(0)            
-                self.py.setDataStrobe(1)
-#               print 'Data written: %2.2X' % (data | (bk << 7))
-        
-        #FUTURE: update the prev_channels array to keep track of changes
-
-    """
-    def reset(self):
-        #Clears all channels and sends to the hardware
-        #set all channels to OFF
-        for i in range(0, self.num_channels):
-            self.channels[i]=0
-
-        self.execute()
-    """
-
-    """
-    def all_on(self):
-        #Sets all channels on and writes to the hardware
-        #set all channels to ON
-        for i in range(0, self.num_channels):
-            self.channels[i]=1
-
-        self.execute()
-    """
-    """
-    def setChannelExec(self, channel, value):
-        #Changes the state of one channel and sends the change
-        #   immediately to the channel device
-        if (self.setChannel(channel, value)):
-            self.execute()
-            return True
-        else:
-            return False
-    """
-    """
-    def setEventExec(self, event):
-        #Changes the state of one channel and sends the change
-        #    immediately to the channel device
-        if(self.setEvent(event)):
-            self.execute()
-            return True
-        else:
-            return False
-    """
-    """
-    def oneChannelExec(self, channel, value=1):
-        #Changes the state of one channel clearing all others
-        #    immediately to the channel device
-        if (self.oneChannel(channel, value)):
-            self.execute()
-            return True
-        else:
-            return False
-    """
-
-
-
 #***************** ValvePort_Beep *************************
 class ValvePort_Beep(ValvePort):
     def __init__(self, channels=24, channelsperbank=6):
         self.mute = False  # don't produce an output
         ValvePort.__init__(self, channels, channelsperbank)
-        
-                 
+        self.reset()
+
     def execute(self):
         """Display the output of the sequence on a bitmap canvase"""
         if self.mute == False:
@@ -1378,8 +1247,6 @@ class ValvePort_Beep(ValvePort):
 
         # set the exec state array
         ValvePort.execute(self)
-
-
 
 #*********************** ValvePortBank ****************************
     
