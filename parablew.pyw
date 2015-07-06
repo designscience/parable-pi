@@ -37,6 +37,55 @@ from subprocess import call
 __version__ = "2.0 beta"
 
 class parablew(model.Background):
+    key_sequence = {
+        # flourishes
+        'q': 'beep',
+        'w': 'bang',
+        'e': 'LL',
+        'r': 'RR',
+        't': 'flying-V',
+        'y': 'BLOW-left',
+        'u': 'BLOW-mid',
+        'i': 'BLOW-right',
+        'o': 'wiggle',
+        'p': 'woosh',
+        '[': 'faerie-sweep-LEFT',
+        ']': 'faerie-sweep-RIGHT',
+        '{': 'faerie-sweep-LEFT',
+        '}': 'faerie-sweep-RIGHT',
+        # backing
+        'a': 'castinets',
+        's': 'castinet-ALT',
+        'd': 'contagious',
+        'f': 'contagious-LEFT',
+        'g': 'contagious-RIGHT',
+        'h': 'jig',
+        'j': 'irish-jig',
+        'k': 'jig-PAT',
+        'l': 'marquis',
+        # beats
+        'z': 'big-beat',
+        'x': 'Random4THs',
+        'c': 'tribal-1',
+        'v': 'tribal-2',
+        'b': 'tribal-3',
+        'n': 'crazy-eights',
+        'm': 'crazy-thrityeights',
+        ',': 'nutso',
+        '.': 'gattling-gun',
+        '/': 'machine-gun',
+        '<': 'nutso',
+        '>': 'gattling-gun',
+        '?': 'machine-gun',
+        # silver
+        '1': 'silver-suit-1',
+        '2': 'silver-suit-2',
+        '3': 'silver-suit-3',
+        '4': 'silver-suit-4',
+        '5': 'silver-suit-5',
+        '6': 'silver-suit-6'
+    }
+
     def __init__(self, aParent, aBgRsrc):
         model.Background.__init__(self, aParent, aBgRsrc)
 
@@ -53,7 +102,7 @@ class parablew(model.Background):
         self.foot = False       # set to True when switch is closed
 
         # button maintenance
-        self.num_buttons = 35  # number of possible sequence buttons
+        self.num_buttons = 45  # number of possible sequence buttons
         self.top_button = 0    # 0-based button (name) index  "SEQ0"
 
         self.auto_pilot = False     # run in auto pilot mode
@@ -201,7 +250,7 @@ class parablew(model.Background):
             self.vp1.set_light(ch+2, (100 * i + 25, 25))
             self.vp1.set_light(ch+3, (100 * i + 25, 0))
             """
-            self.vp1.set_light(ch+1, ((100 * i)     , 25))
+            self.vp1.set_light(ch+1, ((100 * i), 25))
             self.vp1.set_light(ch+2, ((100 * i) + 20, 50))
             self.vp1.set_light(ch+3, ((100 * i) + 40, 25))
         
@@ -212,7 +261,7 @@ class parablew(model.Background):
 
         #create screen buttons
         for i in range(self.num_buttons):
-            self.components['SEQ' + str(i)] = {'type':'Button', 'name':'SEQ' + str(i), 'id':i, 'position':(20 +(152 * (i%5)), 150 + (40 * int(i/5))), 'size':(120, 30), 'label':'Sequence ' + str(i+1), 'command':'seqBtn' + str(i+1), 'visible':False}
+            self.components['SEQ' + str(i)] = {'type': 'Button', 'name': 'SEQ' + str(i), 'id': i, 'position': (20 + (152 * (i % 5)), 150 + (40 * int(i/5))), 'size': (120, 30), 'label': 'Sequence ' + str(i+1), 'command': 'seqBtn' + str(i+1), 'visible': False}
             
         # Other output objects
         self.vp2 = parclasses.ValvePort_GPIO(18, 6)
@@ -273,16 +322,20 @@ class parablew(model.Background):
         keycode = event.keyCode
         print "Key pressed " + str(keycode)
         self.components.KeyInput.clear()
+
+        keypressed = chr(keycode - (65 - ord('a')))
+
         if keycode == wx.WXK_SPACE:  # wx.WXK_RETURN
             self.on_pbTap_mouseDown(event)
         elif keycode == wx.WXK_ESCAPE:
             self.on_btnKill_mouseClick(event)
-        elif keycode == 81:  # q
-            self.runSequence(6)
-        elif keycode == 87:  # w
-            self.runSequence(3)
         elif keycode == 351:  # fn F12
             call(["sudo poweroff", ""])
+        else:
+            try:
+                self.runSequenceByName(self.key_sequence[keypressed])
+            except:
+                print "No keycode found for key: " + keypressed
         event.Skip()
 
     def on_initialize(self, event):
@@ -571,12 +624,32 @@ class parablew(model.Background):
     def on_SEQ34_mouseUp(self, event): self.seqCmdUp(event)
     def on_SEQ35_mouseDown(self, event): self.seqCmdDown(event)
     def on_SEQ35_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ36_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ36_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ37_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ37_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ38_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ38_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ39_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ39_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ40_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ40_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ41_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ41_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ42_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ42_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ43_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ43_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ44_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ44_mouseUp(self, event): self.seqCmdUp(event)
+    def on_SEQ45_mouseDown(self, event): self.seqCmdDown(event)
+    def on_SEQ45_mouseUp(self, event): self.seqCmdUp(event)
 
     def seqCmdDown(self, event):
         """ This is called on the down click of all sequence buttons.
             it toggles the sequence state (toggle handled in ControlBank) """
         if (self.auto_pilot == False):
-            # print event.target.id
+            # print even.t.target.id
             # print"toggle|" + self.sequences[event.target.id]
             self.out_queue.put("toggle|" + self.sequences[event.target.id])
             self.trigger_times[event.target.id] = time.time()
@@ -593,10 +666,24 @@ class parablew(model.Background):
         event.Skip()
 
     def runSequence(self, sequence_id):
-        """ run a sequence by name (for keyboard operation, etc) """
+        """ run a sequence by loaded index (for keyboard operation, etc) """
         if (self.auto_pilot == False):
             #print "stop|" + self.sequences[event.target.id]
             self.out_queue.put("toggle|" + self.sequences[sequence_id])
+
+    def runSequenceByName(self, sequence_name):
+        """ Runs a sequence by sequence name string """
+        found = False
+        index = 0
+        while not found and index < self.sequences.__len__():
+            if self.sequences[index] == sequence_name:
+                found = True
+            else:
+                index += 1
+        if found:
+            self.runSequence(index)
+        else:
+            print "Sequence " + sequence_name + " not found"
 
     def on_fileImport_command(self, event):
         if (self.seq.running() == False):

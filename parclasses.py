@@ -1166,24 +1166,8 @@ class ValvePort_GPIO(ValvePort):
         self.channel_offset = 2  # Added to channel number to map to first used GPIO channel
         GPIO.setmode(GPIO.BCM)  # GPIO.BCM for IO pins, GPIO.BOARD for connector pins
         GPIO.setwarnings(False)
-        GPIO.setup(2, GPIO.OUT)
-        GPIO.setup(3, GPIO.OUT)
-        GPIO.setup(4, GPIO.OUT)
-        GPIO.setup(5, GPIO.OUT)
-        GPIO.setup(6, GPIO.OUT)
-        GPIO.setup(7, GPIO.OUT)
-        GPIO.setup(8, GPIO.OUT)
-        GPIO.setup(9, GPIO.OUT)
-        GPIO.setup(10, GPIO.OUT)
-        GPIO.setup(11, GPIO.OUT)
-        GPIO.setup(12, GPIO.OUT)
-        GPIO.setup(13, GPIO.OUT)
-        GPIO.setup(14, GPIO.OUT)
-        GPIO.setup(15, GPIO.OUT)
-        GPIO.setup(16, GPIO.OUT)
-        GPIO.setup(17, GPIO.OUT)
-        GPIO.setup(18, GPIO.OUT)
-        GPIO.setup(19, GPIO.OUT)
+        for ch in range(0, self.num_channels):
+            GPIO.setup(ch + self.channel_offset, GPIO.OUT)
         self.reset()
 
     def execute(self):
