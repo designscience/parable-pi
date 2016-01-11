@@ -1711,7 +1711,6 @@ def runit():
         v.reset()
 
 
-
 def go(vp, queue_obj):
     print 'ENTERING GO\n'
     cl = ControlList()

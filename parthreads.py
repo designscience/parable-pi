@@ -52,8 +52,6 @@ class ControlBank(object):
         self.btic = beatnik.Beatnik()  # beat keeper object
         self.use_beat = False
         
-
-
     def __call__(self, event_queue, in_queue, out_queue):
         """ called as a target of a threaded.Thread object, this will
             run the sequencing functions, communicating through the queues """
@@ -65,15 +63,15 @@ class ControlBank(object):
         shutdown = False
         self.light_state = False  # current state of beat light
 
-        #send first beat light message
-        if self.btic.BeatLight() == True:
+        # send first beat light message
+        if self.btic.BeatLight() is True:
             self.out_q.put("beaton")
         else:
             self.out_q.put("beatoff")
 
         # run thread loop
-        while running == True:
-            if self.die_pending == False:
+        while running is True:
+            if self.die_pending is False:
                 self.sendPendingEvents()
                 self.processCommands()
 
@@ -87,19 +85,19 @@ class ControlBank(object):
                 light = self.btic.BeatLight()
                 if light != self.light_state:
                     self.light_state = light
-                    if light == True:
+                    if light is True:
                         self.out_q.put("beatoff")
                     else:
                         self.out_q.put("beaton")
                     wx.WakeUpIdle()                    
                 
-                if self.allClear() == True:
+                if self.allClear() is True:
                     time.sleep(.01)
                     #pass
             else:
                 # stop the loop/thread when all is cleaned up
                 self.sendPendingEvents()
-                if self.allClear() == True:
+                if self.allClear() is True:
                     self.clearBank()                
                     self.die_pending = False
                     running = False
@@ -111,7 +109,7 @@ class ControlBank(object):
         """ Send any events due for playback to the main thread """
         for seq in self.sequences:
             ev_found = True
-            while(ev_found == True):
+            while ev_found is True:
                 ev = seq.getNextByTime()
                 if isinstance(ev, parclasses.ControlEvent):
                     self.ev_q.put(ev)
@@ -123,10 +121,10 @@ class ControlBank(object):
 
     def processCommands(self):
         """ receive commands from the main thread and do them """
-        if self.in_q.empty() == False and self.die_pending == False:
+        if self.in_q.empty() is False and self.die_pending is False:
             cmdstr = self.in_q.get()
             cmd = cmdstr.split("|")
-            #print "Thread received command " + cmd[0]
+            # print "Thread received command " + cmd[0]
 
             # process the commands
             if cmd[0] == "die":
@@ -138,7 +136,7 @@ class ControlBank(object):
 
             elif cmd[0] == "stop":
                 if len(cmd[1]) > 0:
-                    if (self.stop(cmd[1]) == True):
+                    if self.stop(cmd[1]) is True:
                         self.out_q.put("stopped|" + cmd[1])
                 else:
                     self.stop()
